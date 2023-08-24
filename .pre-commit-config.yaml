@@ -1,0 +1,27 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+# Options for below hooks are configured in setup.cfg
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    - id: check-yaml
+    # This will check that no large files are committed, but will exclude LFS
+    - id: check-added-large-files
+    # We exclude notebooks as we don't care, it's json anyway
+    - id: end-of-file-fixer
+      exclude: "\\.ipynb$"
+    - id: trailing-whitespace
+      exclude: "\\.ipynb$"
+  - repo: https://github.com/psf/black
+    rev: '23.7.0'
+    hooks:
+      - id: black
+  - repo: https://github.com/pycqa/isort
+    rev: '5.12.0'
+    hooks:
+      - id: isort
+  - repo: https://github.com/pycqa/flake8
+    rev: '6.1.0'
+    hooks:
+      - id: flake8

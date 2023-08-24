@@ -7,7 +7,6 @@ import pandas as pd
 
 from tz_canary.transitions_data import Transition, TransitionsData
 
-
 logger = logging.getLogger(__name__)
 
 

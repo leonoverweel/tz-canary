@@ -1,6 +1,7 @@
-import pytest
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+
+import pytest
 
 from tz_canary.transitions_data import Transition
 
