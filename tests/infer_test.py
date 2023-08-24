@@ -32,11 +32,21 @@ def tr_ams_2023_spring():
     )
 
 
-def test_infer_timezone():
-    idx = pd.date_range(
-        start="2023-01-01", end="2024-01-01", freq="15min", tz="Europe/Amsterdam"
-    )
-    assert infer_time_zone(idx) == {ZoneInfo("Europe/Amsterdam")}
+@pytest.mark.parametrize(
+    "dt_index, expected, not_expected",
+    [
+        ("idx_ams_2023", "Europe/Amsterdam", {"UTC", "America/New_York"}),
+        ("idx_ny_2023", "America/New_York", {"UTC", "Europe/Amsterdam"}),
+    ],
+)
+def test_infer_timezone(dt_index, expected, not_expected, request):
+    result = infer_time_zone(request.getfixturevalue(dt_index))
+
+    # Check that the expected time zone is in the result
+    assert {ZoneInfo(expected)}.issubset(result)
+
+    # Check that the not expected time zones are not in the result
+    assert not {ZoneInfo(tz) for tz in not_expected}.issubset(result)
 
 
 @pytest.mark.parametrize(

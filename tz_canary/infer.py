@@ -1,5 +1,6 @@
+import logging
 from datetime import timedelta
-from typing import Set
+from typing import Optional, Set
 from zoneinfo import ZoneInfo
 
 import pandas as pd
@@ -7,25 +8,44 @@ import pandas as pd
 from tz_canary.transitions_data import Transition, TransitionsData
 
 
+logger = logging.getLogger(__name__)
+
+
 def infer_time_zone(
-    dt_index_naive: pd.DatetimeIndex, transition_data: TransitionsData = None
+    dt_index: pd.DatetimeIndex, transition_data: Optional[TransitionsData] = None
 ) -> Set[ZoneInfo]:
+    """Infer a set of plausible time zones based on DST switches.
+
+    Args:
+        dt_index: A pandas DatetimeIndex.
+        transition_data: A TransitionsData object. If None, the TransitionsData will be
+            built for the years spanning the given index. When inferring time zones for
+            many indices, it is more efficient to pass a TransitionsData object that
+            spans the entire time range.
+
+    Returns:
+        A set of plausible time zones for the given index.
+    """
+
     if transition_data is None:
         transition_data = TransitionsData(
-            year_start=dt_index_naive.min().year, year_end=dt_index_naive.max().year
+            year_start=dt_index.min().year, year_end=dt_index.max().year
         )
 
-    # Remove time zone if set
-    reported_tz = dt_index_naive.tz
-    dt_index_naive = dt_index_naive.tz_localize(None)
+    # Remove time zone if set; what the index reports to be is irrelevant for inference.
+    reported_tz = dt_index.tz
+    if reported_tz is not None:
+        logger.info(
+            f"`dt_index` claims to have time zone `{reported_tz}`. "
+            "Ignoring this during time zone inference."
+        )
+        dt_index = dt_index.tz_localize(None)
 
     # Find plausible time zones
     plausible_time_zones = set()
     for tz_name, transitions in transition_data.tz_transitions.items():
-        if tz_name != "Europe/Amsterdam" and tz_name != "America/New_York":
-            continue  # TODO - remove this
         if any(
-            _check_transition_occurs(dt_index_naive, tz_name, transition)
+            _check_transition_occurs(dt_index, tz_name, transition)
             for transition in transitions
         ):
             plausible_time_zones.add(ZoneInfo(tz_name))
