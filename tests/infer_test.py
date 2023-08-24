@@ -9,10 +9,17 @@ from tz_canary.transitions_data import Transition
 
 
 @pytest.fixture
-def idx_ams_2023_spring():
+def idx_ams_2023():
     return pd.date_range(
-        start="2023-03-26", end="2023-03-27", freq="15min", tz="Europe/Amsterdam"
-    )
+        start="2023-01-01", end="2023-12-31 23:45:00", freq="15T", tz="Europe/Amsterdam"
+    ).tz_localize(None)
+
+
+@pytest.fixture
+def idx_ny_2023():
+    return pd.date_range(
+        start="2023-01-01", end="2023-12-31 23:45:00", freq="15T", tz="America/New_York"
+    ).tz_localize(None)
 
 
 @pytest.fixture
@@ -34,7 +41,10 @@ def test_infer_timezone():
 
 @pytest.mark.parametrize(
     "dt_index, transition, candidate_tz_name, expected",
-    [("idx_ams_2023_spring", "tr_ams_2023_spring", "Europe/Amsterdam", True)],
+    [
+        ("idx_ams_2023", "tr_ams_2023_spring", "Europe/Amsterdam", True),
+        ("idx_ny_2023", "tr_ams_2023_spring", "America/New_York", False),
+    ],
 )
 def test_check_transition_occurs(
     dt_index, transition, candidate_tz_name, expected, request
