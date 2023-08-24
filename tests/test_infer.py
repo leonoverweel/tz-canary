@@ -10,7 +10,7 @@ from tz_canary.infer import _check_transition_occurs, infer_time_zone
     [
         ("idx_ams_2023", "Europe/Amsterdam", {"UTC", "America/New_York"}),
         ("idx_ny_2023", "America/New_York", {"UTC", "Europe/Amsterdam"}),
-        # ("idx_utc_2023", "UTC", {"Europe/Amsterdam", "America/New_York"}),
+        ("idx_utc_2023", "UTC", {"Europe/Amsterdam", "America/New_York"}),
     ],
 )
 def test_infer_timezone(dt_index, expected, not_expected, request):

@@ -48,6 +48,9 @@ class TransitionsData:
                 if self.year_start <= transition_time.year <= self.year_end
             ]
 
+        # Special case: UTC has no transitions
+        self.tz_transitions["UTC"] = []
+
 
 if __name__ == "__main__":
     transition_data = TransitionsData()

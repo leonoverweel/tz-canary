@@ -41,18 +41,40 @@ def infer_time_zone(
         )
         dt_index = dt_index.tz_localize(None)
 
-    # Find plausible time zones
-    # TODO - Once we also have fall DST checks, start from the full set and remove
-    #   implausible time zones instead of starting from an empty set and adding
-    #   plausible ones.
-    plausible_time_zones = set()
+    # Find plausible time zones.
+    all_time_zones = set(ZoneInfo(tz) for tz in transition_data.tz_transitions.keys())
+    plausible_time_zones = set()  # all expected DST transitions occur
+    implausible_time_zones = set()  # at least one expected DST transition doesn't occur
+
     for tz_name, transitions in transition_data.tz_transitions.items():
+        # Check if each transition occurs, does not occur, or is out of range.
         transition_occurrences = [
             _check_transition_occurs(dt_index, tz_name, transition)
             for transition in transitions
         ]
-        if any(transition_occurrences):
+
+        # Discard out-of-range transitions as they do not give us any information.
+        transition_occurrences_within_range = [
+            t for t in transition_occurrences if t is not None
+        ]
+
+        # If no transitions occur with in the range, we cannot say whether the time zone
+        #   is plausible or not.
+        if len(transition_occurrences_within_range) == 0:
+            continue
+
+        # If all DST changes that are expected for the time zone occur it is a plausible
+        #   time zone. Otherwise, it is not.
+        if all(transition_occurrences_within_range):
             plausible_time_zones.add(ZoneInfo(tz_name))
+        else:
+            implausible_time_zones.add(ZoneInfo(tz_name))
+
+    # If there are no plausible time zones specifically detected for the index (its
+    #   range may not cover any potential DST changes, or it may actually have no DST
+    #   changes), we say all time zones that are not implausible are plausible.
+    if len(plausible_time_zones) == 0:
+        plausible_time_zones = all_time_zones - implausible_time_zones
 
     return plausible_time_zones
 
@@ -176,11 +198,11 @@ def _localize_naive(utc_time: datetime, tz_name: str) -> datetime:
     """Localize a time zone-aware UTC time to a time zone and make it time zone-naive.
 
     Args:
-        utc_time: A naive UTC time.
+        utc_time: A time zone-aware time in UTC.
         tz_name: The name of the time zone to localize to.
 
     Returns:
-        The localized time.
+        The naive localized time.
     """
 
     return utc_time.astimezone(ZoneInfo(tz_name)).replace(tzinfo=None)
