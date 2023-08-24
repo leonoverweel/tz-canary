@@ -42,12 +42,16 @@ def infer_time_zone(
         dt_index = dt_index.tz_localize(None)
 
     # Find plausible time zones
+    # TODO - Once we also have fall DST checks, start from the full set and remove
+    #   implausible time zones instead of starting from an empty set and adding
+    #   plausible ones.
     plausible_time_zones = set()
     for tz_name, transitions in transition_data.tz_transitions.items():
-        if any(
+        transition_occurrences = [
             _check_transition_occurs(dt_index, tz_name, transition)
             for transition in transitions
-        ):
+        ]
+        if any(transition_occurrences):
             plausible_time_zones.add(ZoneInfo(tz_name))
 
     return plausible_time_zones
@@ -55,7 +59,7 @@ def infer_time_zone(
 
 def _check_transition_occurs(
     dt_index_naive: pd.DatetimeIndex, candidate_tz_name: str, transition: Transition
-) -> bool:
+) -> Optional[bool]:
     """Check if a DST transition occurs in the given index.
 
     We check three cases:
@@ -69,10 +73,14 @@ def _check_transition_occurs(
         transition: The transition to check.
 
     Returns:
-        True if the transition occurs in the index, False otherwise.
+        True if the transition occurs, False if it does not, None if it is outside the
+            range of the index.
     """
     if dt_index_naive.tz is not None:
-        raise ValueError("`dt_index_naive` must be time zone-naive.")
+        raise ValueError(
+            "`dt_index_naive` may not have a time zone set. "
+            "You can remove it using `.tz_localize(None)`"
+        )
 
     # If the transition time is not within the index, it cannot have occurred.
     utc_transition_time_naive = transition.utc_transition_time.replace(tzinfo=None)
@@ -80,13 +88,14 @@ def _check_transition_occurs(
         utc_transition_time_naive < dt_index_naive.min()
         or utc_transition_time_naive > dt_index_naive.max()
     ):
-        return False
+        return None
 
     # Check if the transition occurs (spring forward or fall back).
     if _check_spring_forward_occurs(dt_index_naive, transition, candidate_tz_name):
         return True
     # TODO - implement check for fall back
 
+    # Neither spring forward nor fall back occurred.
     return False
 
 
