@@ -1,6 +1,25 @@
-from datetime import datetime
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytz
+
+
+@dataclass
+class Transition:
+    utc_transition_time: datetime  # When the transition occurs, in UTC
+    utc_offset: timedelta  # The new UTC offset (e.g. 2h for CET -> CEST)
+    dst_offset: timedelta  # The new amount of DST in effect (e.g. 1h for CET -> CEST)
+    tz_name: str  # The new timezone name (e.g. CEST)
+
+    @classmethod
+    def from_pytz_transition(cls, transition_time, transition_info):
+        return cls(
+            utc_transition_time=transition_time.replace(tzinfo=ZoneInfo("UTC")),
+            utc_offset=transition_info[0],
+            dst_offset=transition_info[1],
+            tz_name=transition_info[2],
+        )
 
 
 class TransitionsData:
@@ -12,27 +31,22 @@ class TransitionsData:
         self.build_tz_transitions()
 
     def build_tz_transitions(self):
-        def _extract_tz_transition_info(transition_time, transition_info):
-            return {
-                "utc_transition_time": transition_time,  # when the switch happens
-                "utc_offset": transition_info[0],  # the new UTC offset
-                "dst": transition_info[1],  # not sure what this means
-                "tz_name": transition_info[2],  # the new timezone name
-            }
-
         self.tz_transitions = {}
         for iana_name in pytz.common_timezones:  # IANA: https://www.iana.org/time-zones
-            tz = pytz.timezone(iana_name)
             try:
-                self.tz_transitions[iana_name] = [
-                    _extract_tz_transition_info(transition_time, transition_info)
-                    for transition_time, transition_info in zip(
-                        tz._utc_transition_times, tz._transition_info
-                    )
-                    if self.year_start <= transition_time.year <= self.year_end
-                ]
-            except AttributeError:
-                pass  # Not all time zones have DST transitions
+                pytz_transitions = zip(
+                    pytz.timezone(iana_name)._utc_transition_times,
+                    pytz.timezone(iana_name)._transition_info,
+                )
+            except AttributeError:  # Not all time zones have DST transitions
+                continue
+
+            # Add transitions for this time zone for the given year range
+            self.tz_transitions[iana_name] = [
+                Transition.from_pytz_transition(transition_time, transition_info)
+                for transition_time, transition_info in pytz_transitions
+                if self.year_start <= transition_time.year <= self.year_end
+            ]
 
 
 if __name__ == "__main__":
