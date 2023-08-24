@@ -29,7 +29,10 @@ def test_infer_timezone(dt_index, expected, not_expected, request):
         ("idx_ams_2022", "tr_ams_2023_spring", "Europe/Amsterdam", None),
         ("idx_ams_2023", "tr_ams_2023_spring", "Europe/Amsterdam", True),
         ("idx_ny_2023", "tr_ams_2023_spring", "America/New_York", False),
+        ("idx_ams_2023", "tr_ams_2023_fall", "Europe/Amsterdam", True),
+        ("idx_ny_2023", "tr_ams_2023_fall", "America/New_York", False),
         ("idx_utc_2023", "tr_ams_2023_spring", "UTC", False),
+        ("idx_utc_2023", "tr_ams_2023_fall", "UTC", False),
     ],
 )
 def test_check_transition_occurs(

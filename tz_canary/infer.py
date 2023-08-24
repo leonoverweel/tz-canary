@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Optional, Set
 from zoneinfo import ZoneInfo
 
@@ -65,7 +65,7 @@ def _check_transition_occurs(
     We check three cases:
     - Whether the transition time is within the index at all
     - Whether a spring forward DST transition occurs (if applicable to the transition)
-    - Whether a fall backwards DST transition occurs (if applicable to the transition)
+    - Whether a fall back DST transition occurs (if applicable to the transition)
 
     Args:
         dt_index_naive: A time zone-naive datetime index.
@@ -93,7 +93,8 @@ def _check_transition_occurs(
     # Check if the transition occurs (spring forward or fall back).
     if _check_spring_forward_occurs(dt_index_naive, transition, candidate_tz_name):
         return True
-    # TODO - implement check for fall back
+    if _check_fall_back_occurs(dt_index_naive, transition, candidate_tz_name):
+        return True
 
     # Neither spring forward nor fall back occurred.
     return False
@@ -101,12 +102,20 @@ def _check_transition_occurs(
 
 def _check_spring_forward_occurs(
     dt_index_naive: pd.DatetimeIndex, transition: Transition, candidate_tz_name: str
-):
-    """Check if the transition from non-DST to DST occurs (spring forward.
+) -> bool:
+    """Check if the transition from non-DST to DST occurs (spring forward).
 
     When converting the UTC transition time to the new time zone, the hour (to be
     precise, the amount of time corresponding to the DST offset) before it should not
     exist in the index.
+
+    Args:
+        dt_index_naive: A time zone-naive datetime index.
+        transition: The potential spring forward transition to check.
+        candidate_tz_name: The name of the time zone whose transition we're checking.
+
+    Returns:
+        True if the spring forward DST transition occurs, False if it does not.
     """
 
     # When we spring forward, the DST offset is positive; if it is negative, a spring
@@ -116,9 +125,9 @@ def _check_spring_forward_occurs(
 
     # First localize the UTC transition time to the new candidate time zone, then remove
     #   the time zone information, so we can find it within the naive datetime index.
-    local_transition_time_naive = transition.utc_transition_time.astimezone(
-        ZoneInfo(candidate_tz_name)
-    ).replace(tzinfo=None)
+    local_transition_time_naive = _localize_naive(
+        utc_time=transition.utc_transition_time, tz_name=candidate_tz_name
+    )
 
     # Find the indices in that are within the DST offset.
     idx_during_transition = dt_index_naive[
@@ -129,3 +138,49 @@ def _check_spring_forward_occurs(
     # If there are no indices during the DST transition, a spring forward occurred. If
     #   there are, it did not.
     return len(idx_during_transition) == 0
+
+
+def _check_fall_back_occurs(
+    dt_index_naive: pd.DatetimeIndex, transition: Transition, candidate_tz_name: str
+) -> bool:
+    """Check if the transition from DST to non-DST occurs (fall back).
+
+    When converting the UTC transition time to the new time zone, this time should exist
+    in the index twice: once with the DST offset, once without.
+
+    Args:
+        dt_index_naive: A time zone-naive datetime index.
+        transition: The potential fall back transition to check.
+        candidate_tz_name: The name of the time zone whose transition we're checking.
+
+    Returns:
+        True if the fall back DST transition occurs, False if it does not.
+    """
+
+    # When we fall back, the DST offset becomes zero.
+    if transition.dst_offset != timedelta(0):
+        return False
+
+    # Find the indices in that are equal to the localized, naive transition time.
+    idx_during_transition = dt_index_naive[
+        dt_index_naive
+        == _localize_naive(transition.utc_transition_time, candidate_tz_name)
+    ]
+
+    # If there are two indices at the time of the DST transition, a fall back occurred.
+    #   If not, it did not.
+    return len(idx_during_transition) == 2
+
+
+def _localize_naive(utc_time: datetime, tz_name: str) -> datetime:
+    """Localize a time zone-aware UTC time to a time zone and make it time zone-naive.
+
+    Args:
+        utc_time: A naive UTC time.
+        tz_name: The name of the time zone to localize to.
+
+    Returns:
+        The localized time.
+    """
+
+    return utc_time.astimezone(ZoneInfo(tz_name)).replace(tzinfo=None)
