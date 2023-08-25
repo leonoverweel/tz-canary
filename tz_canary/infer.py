@@ -19,8 +19,8 @@ def infer_time_zone(
         dt_index: A pandas DatetimeIndex.
         transition_data: A TransitionsData object. If None, the TransitionsData will be
             built for the years spanning the given index. When inferring time zones for
-            many indices, it is more efficient to pass a TransitionsData object that
-            spans the entire time range.
+            many indices, it is more efficient to build a TransitionsData object once
+            and pass it to multiple calls of this function.
 
     Returns:
         A set of plausible time zones for the given index.
@@ -89,7 +89,7 @@ def _check_transition_occurs(
     - Whether a fall back DST transition occurs (if applicable to the transition)
 
     Args:
-        dt_index_naive: A time zone-naive datetime index.
+        dt_index_naive: A time-zone-naive datetime index.
         candidate_tz_name: The name of the time zone whose transition we're checking.
         transition: The transition to check.
 
@@ -131,7 +131,7 @@ def _check_spring_forward_occurs(
     exist in the index.
 
     Args:
-        dt_index_naive: A time zone-naive datetime index.
+        dt_index_naive: A time-zone-naive datetime index.
         transition: The potential spring forward transition to check.
         candidate_tz_name: The name of the time zone whose transition we're checking.
 
@@ -170,7 +170,7 @@ def _check_fall_back_occurs(
     in the index twice: once with the DST offset, once without.
 
     Args:
-        dt_index_naive: A time zone-naive datetime index.
+        dt_index_naive: A time-zone-naive datetime index.
         transition: The potential fall back transition to check.
         candidate_tz_name: The name of the time zone whose transition we're checking.
 
@@ -194,10 +194,10 @@ def _check_fall_back_occurs(
 
 
 def _localize_naive(utc_time: datetime, tz_name: str) -> datetime:
-    """Localize a time zone-aware UTC time to a time zone and make it time zone-naive.
+    """Localize a time-zone-aware UTC time to a time zone and make it time-zone-naive.
 
     Args:
-        utc_time: A time zone-aware time in UTC.
+        utc_time: A time-zone-aware time in UTC.
         tz_name: The name of the time zone to localize to.
 
     Returns:
