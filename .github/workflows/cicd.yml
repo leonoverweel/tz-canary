@@ -4,7 +4,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -15,13 +15,5 @@ jobs:
         python-version: '3.11'
         cache: 'poetry'
     - run: poetry install
-  lint:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
     - run: poetry run pre-commit run -a
-  test:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
     - run: poetry run pytest
