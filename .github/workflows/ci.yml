@@ -3,8 +3,12 @@ on:
     branches: [main]
   pull_request:
 
+# Apparently splitting these into separate jobs is not really a thing on GitHub. All the
+# examples here use a single job:
+# https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
 jobs:
-  test:
+  build_lint_test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
