@@ -116,3 +116,5 @@ for i in range(10):
 ## Contributing
 
 Please don't hesitate to open issues and PRs!
+
+GitHub repository: https://github.com/leonoverweel/tz-canary.
