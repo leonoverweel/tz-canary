@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tz-canary"
-version = "0.1.0"
+version = "0.1.1"
 description = "Infer plausible time zones for a time series dataset based on Daylight Savings Time switches"
 authors = ["Leon Overweel <l.overweel@gmail.com>"]
 readme = "README.md"
