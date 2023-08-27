@@ -46,10 +46,13 @@ def validate_time_zone(
         )
 
     given_time_zone = time_zone or dt_index.tz  # TODO - normalize to ZoneInfo
+    if isinstance(given_time_zone, str):
+        given_time_zone = ZoneInfo(given_time_zone)
+
     plausible_time_zones = infer_time_zone(dt_index, transition_data)
 
     if given_time_zone not in plausible_time_zones:
         raise ImplausibleTimeZoneError(
             f"The given time zone `{given_time_zone}` is not plausible for `dt_index`. "
-            f"Plausible time zones are: {plausible_time_zones}"
+            f"It may be one of: `{sorted([tz.key for tz in plausible_time_zones])}`."
         )
