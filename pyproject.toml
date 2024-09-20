@@ -5,6 +5,7 @@ description = "Infer plausible time zones for a time series dataset based on Day
 authors = ["Leon Overweel <l.overweel@gmail.com>"]
 readme = "README.md"
 packages = [{include = "tz_canary"}]
+license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.9"
