@@ -11,13 +11,13 @@ logger = logging.getLogger(__name__)
 
 
 def infer_time_zone(
-    dt_index: pd.DatetimeIndex, transition_data: Optional[TransitionsData] = None
+    dt_index: pd.DatetimeIndex, transitions_data: Optional[TransitionsData] = None
 ) -> Set[ZoneInfo]:
     """Infer a set of plausible time zones based on DST switches.
 
     Args:
         dt_index: A pandas DatetimeIndex.
-        transition_data: A TransitionsData object. If None, the TransitionsData will be
+        transitions_data: A TransitionsData object. If None, the TransitionsData will be
             built for the years spanning the given index. When inferring time zones for
             many indices, it is more efficient to build a TransitionsData object once
             and pass it to multiple calls of this function.
@@ -26,8 +26,8 @@ def infer_time_zone(
         A set of plausible time zones for the given index.
     """
 
-    if transition_data is None:
-        transition_data = TransitionsData(
+    if transitions_data is None:
+        transitions_data = TransitionsData(
             year_start=dt_index.min().year, year_end=dt_index.max().year
         )
 
@@ -41,11 +41,11 @@ def infer_time_zone(
         dt_index = dt_index.tz_localize(None)
 
     # Find plausible time zones.
-    all_time_zones = set(ZoneInfo(tz) for tz in transition_data.tz_transitions.keys())
+    all_time_zones = set(ZoneInfo(tz) for tz in transitions_data.tz_transitions.keys())
     plausible_time_zones = set()  # all expected DST transitions occur
     implausible_time_zones = set()  # at least one expected DST transition doesn't occur
 
-    for tz_name, transitions in transition_data.tz_transitions.items():
+    for tz_name, transitions in transitions_data.tz_transitions.items():
         # Check if each transition occurs, does not occur, or is out of range.
         transition_occurrences = [
             _check_transition_occurs(dt_index, tz_name, transition)
