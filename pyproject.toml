@@ -9,7 +9,6 @@ packages = [{include = "tz_canary"}]
 [tool.poetry.dependencies]
 python = "^3.9"
 pandas = "^2.0.3"
-pytz = "~2023.3"  # pinned because we rely on protected properties
 
 
 [tool.poetry.group.dev.dependencies]
