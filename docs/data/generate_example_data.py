@@ -6,7 +6,7 @@ def generate_example_data():
         index=pd.date_range(
             start="2023-01-01",
             end="2023-12-31",
-            freq="15T",
+            freq="15min",
             tz="Europe/Amsterdam",
             name="datetime",
         ),
