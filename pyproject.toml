@@ -4,6 +4,7 @@ version = "0.1.2"
 description = "Infer plausible time zones for a time series dataset based on Daylight Savings Time switches"
 authors = ["Leon Overweel <l.overweel@gmail.com>"]
 readme = "README.md"
+repository = "https://github.com/leonoverweel/tz-canary"
 packages = [{include = "tz_canary"}]
 
 [tool.poetry.dependencies]
