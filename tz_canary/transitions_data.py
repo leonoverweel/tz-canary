@@ -53,7 +53,7 @@ class TransitionsData:
 
 
 if __name__ == "__main__":
-    transition_data = TransitionsData()
+    transitions_data = TransitionsData()
     from pprint import pprint
 
-    pprint(transition_data.tz_transitions["Europe/Amsterdam"])
+    pprint(transitions_data.tz_transitions["Europe/Amsterdam"])

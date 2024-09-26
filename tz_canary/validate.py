@@ -11,7 +11,7 @@ from tz_canary.transitions_data import TransitionsData
 def validate_time_zone(
     dt_index: pd.DatetimeIndex,
     time_zone: Union[str, ZoneInfo] = None,
-    transition_data: Optional[TransitionsData] = None,
+    transitions_data: Optional[TransitionsData] = None,
 ) -> None:
     """Validate that the given time zone is plausible given DST changes in the index.
 
@@ -28,7 +28,7 @@ def validate_time_zone(
             argument must be given.
         time_zone: A time zone to validate. If `time_zone` is given, `dt_index` must be
             time-zone-naive.
-        transition_data: A TransitionsData object. If None, the TransitionsData will be
+        transitions_data: A TransitionsData object. If None, the TransitionsData will be
             built for the years spanning the given index. When inferring time zones for
             many indices, it is more efficient to build a TransitionsData object once
             and pass it to multiple calls of this function.
@@ -49,7 +49,7 @@ def validate_time_zone(
     if isinstance(given_time_zone, str):
         given_time_zone = ZoneInfo(given_time_zone)
 
-    plausible_time_zones = infer_time_zone(dt_index, transition_data)
+    plausible_time_zones = infer_time_zone(dt_index, transitions_data)
 
     if given_time_zone not in plausible_time_zones:
         raise ImplausibleTimeZoneError(
